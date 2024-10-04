@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Decentralized Voting</title>
+</head>
+<body>
+    <h1>Voting DApp</h1>
+    <div id="candidates"></div>
+    
+    <button onclick="vote(1)">Vote for Alice</button>
+    <button onclick="vote(2)">Vote for Bob</button>
+
+    <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.0.0-beta.36/dist/web3.min.js"></script>
+    <script>
+        const contractAddress = "0xDe2494a076fe53baA1F2BCf02C293Ebf5Ccfe29f"; // Your contract address
+        const abi = [
+            {
+                "inputs": [],
+                "name": "addCandidate",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": ["uint256"],
+                "name": "vote",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "candidatesCount",
+                "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": ["uint256"],
+                "name": "candidates",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "id",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "string",
+                        "name": "name",
+                        "type": "string"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "voteCount",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "uint256",
+                        "name": "_candidateId",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "votedEvent",
+                "type": "event"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "uint256",
+                        "name": "_candidateId",
+                        "type": "uint256"
+                    },
+                    {
+                        "indexed": false,
+                        "internalType": "string",
+                        "name": "_name",
+                        "type": "string"
+                    }
+                ],
+                "name": "candidateAdded",
+                "type": "event"
+            }
+            // Include the rest of the ABI as necessary
+        ];
+
+        let web3 = new Web3(Web3.givenProvider);
+        let contract = new web3.eth.Contract(abi, contractAddress);
+        
+        async function vote(candidateId) {
+            try {
+                let accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+                let account = accounts[0];
+                
+                await contract.methods.vote(candidateId).send({ from: account });
+                alert("Vote successfully submitted!");
+
+                // Optionally refresh candidate information after voting
+                getCandidates();
+            } catch (error) {
+                console.error("Error while voting:", error);
+                alert("Error during the vote submission. Check console for details.");
+            }
+        }
+
+        async function getCandidates() {
+            let candidatesCount = await contract.methods.candidatesCount().call();
+            
+            let candidatesDiv = document.getElementById('candidates');
+            candidatesDiv.innerHTML = ''; // Clear current content
+
+            for (let i = 1; i <= candidatesCount; i++) {
+                let candidate = await contract.methods.candidates(i).call();
+                candidatesDiv.innerHTML += `<p>Candidate ${candidate.id}: ${candidate.name}, Votes: ${candidate.voteCount}</p>`;
+            }
+        }
+
+        // Call the function to display the candidates on page load
+        window.onload = getCandidates;
+
+        // Ensure MetaMask is installed
+        if (typeof window.ethereum !== 'undefined') {
+            console.log('MetaMask is installed!');
+        } else {
+            alert('Please install MetaMask to interact with this DApp.');
+        }
+    </script>
+</body>
+</html>
