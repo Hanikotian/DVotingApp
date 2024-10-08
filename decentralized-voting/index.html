@@ -1,14 +1,38 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Decentralized Voting</title>
+    <link rel="stylesheet" href="styles.css"> <!-- Link to your CSS file -->
 </head>
 <body>
-    <h1>Voting DApp</h1>
-    <div id="candidates"></div>
-    
-    <button onclick="vote(1)">Vote for Alice</button>
-    <button onclick="vote(2)">Vote for Bob</button>
+    <div class="container">
+        <h1 class="title">Choose Wisely!</h1>
+
+        <!-- Candidate Display Section -->
+        <div id="candidates" class="candidate-list">
+            <div class="candidate">
+                <h2>Shweta</h2>
+                <p>Shweta is a technology enthusiast with a background in blockchain and decentralized systems. She advocates for transparency in government elections.</p>
+            </div>
+            <div class="candidate">
+                <h2>Jess</h2>
+                <p>Jess is a data scientist focused on leveraging AI for better decision-making in public policies. He has years of experience in civic tech.</p>
+            </div>
+        </div>
+
+        <!-- Voting Buttons -->
+        <div class="button-container">
+            <button class="vote-button" onclick="vote(1)">Vote for Shweta</button>
+            <button class="vote-button" onclick="vote(2)">Vote for Jess</button>
+        </div>
+    </div>
+
+    <!-- Success Popup -->
+    <div id="success-popup" class="popup hidden">
+        <p>Thank you for voting!</p>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.0.0-beta.36/dist/web3.min.js"></script>
     <script>
@@ -90,7 +114,6 @@
                 "name": "candidateAdded",
                 "type": "event"
             }
-            // Include the rest of the ABI as necessary
         ];
 
         let web3 = new Web3(Web3.givenProvider);
@@ -102,10 +125,11 @@
                 let account = accounts[0];
                 
                 await contract.methods.vote(candidateId).send({ from: account });
-                alert("Vote successfully submitted!");
+                
+                // Show success popup
+                showPopup();
 
-                // Optionally refresh candidate information after voting
-                getCandidates();
+                getCandidates(); // Refresh candidates after voting
             } catch (error) {
                 console.error("Error while voting:", error);
                 alert("Error during the vote submission. Check console for details.");
@@ -120,14 +144,21 @@
 
             for (let i = 1; i <= candidatesCount; i++) {
                 let candidate = await contract.methods.candidates(i).call();
-                candidatesDiv.innerHTML += `<p>Candidate ${candidate.id}: ${candidate.name}, Votes: ${candidate.voteCount}</p>`;
+                candidatesDiv.innerHTML += `<p class="candidate-info">Candidate ${candidate.id}: ${candidate.name}, Votes: ${candidate.voteCount}</p>`;
             }
         }
 
-        // Call the function to display the candidates on page load
-        window.onload = getCandidates;
+        // Show success popup
+        function showPopup() {
+            const popup = document.getElementById("success-popup");
+            popup.classList.remove("hidden");
+            setTimeout(() => {
+                popup.classList.add("hidden");
+            }, 2000); // Hide after 2 seconds
+        }
 
-        // Ensure MetaMask is installed
+        window.onload = getCandidates; // Load candidates on page load
+
         if (typeof window.ethereum !== 'undefined') {
             console.log('MetaMask is installed!');
         } else {
